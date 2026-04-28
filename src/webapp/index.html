@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang ="pt-BR">
+<html lang="pt-BR">
 
 <head>
     <meta charset="UTF-8">
@@ -15,11 +15,147 @@
         <!--Cabeçalho-->
         <div class="header">
             <h1>Sistema de Reserva de Salas de Aula</h1>
-            <!--ADICIONAR BOTÕES LOGIN COM JS-->
+            <div class="user-info">
+                <span id="userName"></span>
+                <button id="loginBtn" class="btn btn-primary btn-sm" onclick="showLoginModal()">Entrar</button>
+                <button id="logoutBtn" class="btn btn-danger btn-sm" style="display:none;"
+                    onclick="logout()">Sair</button>
+            </div>
+        </div>
+
+        <!--Abas-->
+        <ul class="nav nav-tabs mt-4">
+            <li class="nav-item">
+                <button class="nav-link active" onclick="showTab('rooms')">Salas Disponíveis</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" onclick="showTab('myReservations')">Minhas Reservas</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" onclick="showTab('newReservation')">Nova Reserva </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" onclick="showTab('newRoom')">Cadastrar Salas</button>
+            </li>
+        </ul>
+
+        <!--Aba 1 (salas)-->
+        <div id="roomsTab" class="tab-content mt-4">
+            <div class="row" id="roomsContainer">
+                <div class="col-12 text-center">Carregando salas...</div>
+            </div>
+        </div>
+
+        <!--Aba 2 (minhas reservas)-->
+        <div id="myReservationsTab" class="tab-content mt-4" style="display:none;">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Minhas Reservas</h5>
+            </div>
+            <div class="card-body" id=" myReservationsContainer">
+                <p class="text-muted">Faça login para ver as suas reservas</p>
+            </div>
         </div>
     </div>
 
-    <!--Abas de navegação do site-->
-    <!--ADD MENU + BOTÕES DE ACESSO A CADA ABA-->
+    <!--Aba 3 (nova reserva)-->
+    <div id="newReservationTab" class="tab-content mt-4" style="display:none;">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Nova Reserva</h5>
+            </div>
+
+            <div class="card-body">
+                <form id="reservationForm">
+                    <div class="mb-3">
+                        <label class="form-label">Sala</label>
+                        <select id="reservationRoomId" class="form-select" required>
+                            <option value="">Selecione uma sala</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Data</label>
+                        <input type="date" id="reservationDate" class="form-control" required>
+                    </div>
+
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">Hora início</label>
+                            <input type="time" id="reservationStartTime" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Hora fim</label>
+                            <input type="time" id="reservationEndTime" class="form-control" required>
+                        </div </div>
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-success">Confirmar reserva</button>
+                            <button type="button" class="btn btn-secondary"
+                                onclick="resetReservationForm()">Limpar</button>
+                        </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!--Aba 4 (cadastrar sala)-->
+    <div id="newRoomTab" class="tab-content mt-4" style="display:none;">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Cadastrar Nova Sala</h5>
+            </div>
+            <div class="card-body">
+                <form id="roomForm">
+                    <div class="mb-3">
+                        <label class="form-label">ID da Sala (ex:5001)</label>
+                        <input type="text" id="roomId" class="form-control" placeholder="Ex: 5001" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Nome da Sala</label>
+                        <input type="text" id="roomName" class="form-control"
+                            placeholder="Ex: laboratório de informática" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Localização</label>
+                        <input type="text" id="roomLocation" class="form-control" placeholder="Ex: Bloco A, 2o andar"
+                            required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tipo</label>
+                        <select id="roomType" class="form-select">
+                            <option value="Sala de Aula">Sala de Aula</option>
+                            <option value="Laboratório">Laboratório</option>
+                            <option value="Auditório">Auditório</option>
+                            <option value="Sala de Reunião">Sala de Reunião</option>
+                        </select>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" id="roomHasComputers" class="form-check-input">
+                        <label class="form-check-label">Possui Computadores</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Cadastrar Salas</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!--MOdal de login-->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Login</h3>
+                <span class="close" onclick="closeLoginModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>Digite seu email institucional:</p>
+                <input type="email" id="loginEmail" class="form-control mb-2" placeholder="seu@email.com">
+                <button onclick="login()" class="btn btn-primary w-100">Entrar</button>
+                <p class="text-muted small mt-2">Para teste, use qualquer email válido</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
 </body>
+
 </html>
