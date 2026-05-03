@@ -4,7 +4,7 @@ const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 
-//configuração inicial
+// Configuração inicial
 const app = express();
 const PORT = 3000;
 
@@ -13,29 +13,64 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '..', 'webapp')));
 
-//conexão com banco de dados, que está na raiz
-const dbPath = path.join(__dirname, '..', 'bancoreservas_v2.db');
+// MÚLTIPLOS CAMINHOS PARA O BANCO DE DADOS
+const possibleDbPaths = [
+    path.join(__dirname, '..', '..', 'bancoreservas_v2.db'),  // Raiz do projeto
+    path.join(__dirname, '..', 'bancoreservas_v2.db'),       // Pasta src
+    path.join(__dirname, '..', '..', 'src', 'bancoreservas_v2.db'),
+    path.join(__dirname, 'bancoreservas_v2.db'),
+    '/home/leticialemes/Gerenciador-de-reserva-de-salas/bancoreservas_v2.db',
+    '/home/leticialemes/Gerenciador-de-reserva-de-salas/src/bancoreservas_v2.db'
+];
 
-//verifica existência do banco
-if (!fs.existsSync(dbPath)) {
-    console.error(`Banco de dados não encontrado em: ${dbPath}`);
-    console.log('Verifique se o arquivo bancoreservas_v2.db está na raiz do projeto');
+let dbPath = null;
+let db = null;  // Declarar UMA ÚNICA VEZ aqui
+
+// Procurar o banco em todos os possíveis lugares
+for (const possiblePath of possibleDbPaths) {
+    if (fs.existsSync(possiblePath)) {
+        dbPath = possiblePath;
+        console.log(`✅ Banco encontrado em: ${dbPath}`);
+        break;
+    }
+}
+
+if (!dbPath) {
+    console.error('\nBanco de dados não encontrado!');
+    console.log('Locais procurados:');
+    possibleDbPaths.forEach(p => console.log(`   - ${p}`));
+    console.log('\n🔧 Soluções:');
+    console.log('1. Coloque o arquivo bancoreservas_v2.db na RAIZ do projeto');
+    console.log('2. Ou execute: cp src/bancoreservas_v2.db .');
     process.exit(1);
 }
 
 console.log(`Conectando ao banco: ${dbPath}`);
 
-const db = new sqlite3.Database(dbPath, (err) => {
+// Criar a conexão com o banco (APENAS UMA VEZ)
+db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
         console.error('Erro ao conectar ao banco:', err.message);
+        process.exit(1);
     } else {
         console.log('Conectado ao banco SQLite com sucesso!');
+        
+        // Verificar se as tabelas existem
+        db.get("SELECT name FROM sqlite_master WHERE type='table' AND name='sala'", (err, row) => {
+            if (err) {
+                console.error('Erro ao verificar tabelas:', err.message);
+            } else if (!row) {
+                console.warn('Tabela "sala" não encontrada. Execute o programa Java para criar as tabelas.');
+            } else {
+                console.log('Tabelas verificadas com sucesso');
+            }
+        });
     }
 });
 
-//endpoints da API
+// ENDPOINTS DA API
 
-//SALAS
+// SALAS
 // GET /api/rooms - Listar todas as salas
 app.get('/api/rooms', (req, res) => {
     const sql = 'SELECT * FROM sala';
@@ -94,7 +129,7 @@ app.post('/api/rooms', (req, res) => {
     });
 });
 
-//RESERVAS
+// RESERVAS
 // GET /api/reservations - Listar todas as reservas
 app.get('/api/reservations', (req, res) => {
     const sql = 'SELECT * FROM reserva ORDER BY dataReserva DESC';
@@ -219,8 +254,7 @@ app.delete('/api/reservations/:id', (req, res) => {
     });
 });
 
-
-//rota de teste de conexão
+// Rota de teste de conexão
 app.get('/api/health', (req, res) => {
     res.json({ 
         status: 'online', 
@@ -229,13 +263,13 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-//tratamento erros globais
+// Tratamento erros globais
 app.use((err, req, res, next) => {
     console.error('Erro não tratado:', err);
     res.status(500).json({ error: 'Erro interno do servidor' });
 });
 
-//inicia servidor
+// Inicia servidor
 app.listen(PORT, () => {
     console.log('\n========================================');
     console.log('SERVIDOR NODE INICIADO COM SUCESSO!');
@@ -246,7 +280,13 @@ app.listen(PORT, () => {
     console.log('========================================\n');
     
     // Mostrar alguns dados iniciais
-    db.get('SELECT COUNT(*) as count FROM sala', [], (err, result) => {
-        console.log(`Salas cadastradas: ${result ? result.count : 0}`);
-    });
+    if (db) {
+        db.get('SELECT COUNT(*) as count FROM sala', [], (err, result) => {
+            if (err) {
+                console.log(`Erro ao consultar salas: ${err.message}`);
+            } else {
+                console.log(`Salas cadastradas: ${result ? result.count : 0}`);
+            }
+        });
+    }
 });

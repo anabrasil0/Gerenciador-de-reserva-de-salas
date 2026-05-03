@@ -1,4 +1,5 @@
-*{
+/* styles.css - Versão Corrigida */
+* {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -6,7 +7,6 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    font-size: 2vmin;
     background-color: #f9f2de;
     padding: 20px;
 }
@@ -36,7 +36,7 @@ body {
     color: #e8c03b;
 }
 
-/*Abas*/f9f2de
+/* Abas */
 .nav-tabs {
     border-bottom: 1px solid #e8c03b;
 }
@@ -47,31 +47,33 @@ body {
     padding: 10px 20px;
     cursor: pointer;
     font-size: 16px;
-    transition: alt 0.3s;
+    transition: all 0.3s;
 }
 
 .nav-tabs button:hover {
-    background:#be9d30;
+    background: #be9d30;
+    color: white;
 }
 
-nav-tabs button.active {
+.nav-tabs button.active {
     border-bottom: 2px solid #e8c03b;
     color: #e8c03b;
     font-weight: bold;
 }
 
-/*Cards das salas*/
+/* Cards das salas */
 .room-card {
     border: 1px solid #ddd;
-    border-radius: 0px;
+    border-radius: 8px;
     padding: 15px;
     margin-bottom: 20px;
     transition: transform 0.3s, box-shadow 0.3s;
-    background: #f9f2de;
+    background: white;
 }
 
 .room-card:hover {
     transform: translateY(-3px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
 .room-card h4 {
@@ -81,29 +83,29 @@ nav-tabs button.active {
 
 .room-card p {
     margin: 5px 0;
-    color: #555
+    color: #555;
 }
 
 .room-badge {
     display: inline-block;
     padding: 3px 8px;
     border-radius: 4px;
-    font-size: 2vmin;
+    font-size: 12px;
     margin-top: 10px;
 }
 
 .badge-computer {
-    background: #555;
-    color: #f9f2de;
+    background: #28a745;
+    color: white;
 }
 
 .badge-no-computer {
-    background: #8f8c8c;
-    color: #f9f2de;
+    background: #dc3545;
+    color: white;
 }
 
-/*tabela de reservas*/
-.reservation-table {
+/* Tabela de reservas */
+.reservations-table {
     width: 100%;
     border-collapse: collapse;
 }
@@ -116,37 +118,37 @@ nav-tabs button.active {
 }
 
 .reservations-table th {
-    background:#f3d573;
-    color: #555;
+    background: #e8c03b;
+    color: #333;
 }
 
 .reservations-table tr:hover {
-    background: #f3e4bb;
+    background: #f9f2de;
 }
 
 .btn-cancel {
-    background:#e8c03b;
-    color: #555;
-    border:none;
+    background: #dc3545;
+    color: white;
+    border: none;
     padding: 5px 10px;
     border-radius: 4px;
     cursor: pointer;
 }
 
 .btn-cancel:hover {
-    background: #be9d30;
+    background: #c82333;
 }
 
-/*modal*/
+/* Modal */
 .modal {
     display: none;
     position: fixed;
     z-index: 1000;
     left: 0;
-    top:0;
+    top: 0;
     width: 100%;
     height: 100%;
-    background: #f9f2de;
+    background: rgba(0,0,0,0.5);
 }
 
 .modal-content {
@@ -170,7 +172,7 @@ nav-tabs button.active {
 }
 
 .close {
-    font-size: 3vmin;
+    font-size: 28px;
     cursor: pointer;
     color: #aaa;
 }
@@ -179,12 +181,12 @@ nav-tabs button.active {
     color: #555;
 }
 
-/*toast notif*/
+/* Toast notification */
 .toast-notification {
     position: fixed;
     bottom: 20px;
     right: 20px;
-    background: #555;
+    background: #333;
     color: white;
     padding: 12px 20px;
     border-radius: 8px;
@@ -202,19 +204,19 @@ nav-tabs button.active {
 
 .toast-warning {
     background: #ffc107;
-    color: #555;
+    color: #333;
 }
 
-/*formulários*/
+/* Formulários */
 .form-control {
     width: 100%;
     padding: 10px;
     border: 1px solid #e8c03b;
     border-radius: 4px;
-    font-size: 4vmin;
+    font-size: 14px;
 }
 
-form-control:focus {
+.form-control:focus {
     outline: none;
     border-color: #be9d30;
 }
@@ -224,12 +226,12 @@ form-control:focus {
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 4vmin;
+    font-size: 14px;
 }
 
 .btn-primary {
     background: #e8c03b;
-    color: #555;
+    color: #333;
 }
 
 .btn-primary:hover {
@@ -238,23 +240,23 @@ form-control:focus {
 
 .btn-success {
     background: #28a745;
-    color: white
+    color: white;
 }
 
 .btn-success:hover {
     background: #1e7e34;
 }
 
-.bttn-danger {
+.btn-danger {
     background: #dc3545;
     color: white;
 }
 
 .btn-danger:hover {
-    background: #c82444;
+    background: #c82333;
 }
 
-/*loading*/
+/* Loading */
 .loading {
     text-align: center;
     padding: 40px;
@@ -266,7 +268,7 @@ form-control:focus {
     border-radius: 50%;
     width: 40px;
     height: 40px;
-    animation: spin is linear infinite;
+    animation: spin 1s linear infinite;
     margin: 0 auto;
 }
 
@@ -297,7 +299,7 @@ form-control:focus {
     }
 }
 
-/*parte responsiva*/
+/* Responsivo */
 @media (max-width: 768px) {
     .container {
         padding: 10px;
@@ -310,7 +312,7 @@ form-control:focus {
     
     .nav-tabs button {
         padding: 8px 12px;
-        font-size: 2vmin;
+        font-size: 12px;
     }
     
     .room-card {
@@ -318,9 +320,9 @@ form-control:focus {
     }
     
     .reservations-table {
-        font-size: 2vmin;
+        font-size: 12px;
     }
-
+    
     .reservations-table th,
     .reservations-table td {
         padding: 8px;

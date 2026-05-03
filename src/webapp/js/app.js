@@ -1,12 +1,14 @@
+// app.js - Versão Corrigida e Otimizada
+
 // Configuração do servidor
 const API_BASE_URL = 'http://localhost:3000/api';
 
 // Estado da app
 let currentUser = null;
 
-// Inicialização
+// INICIALIZAÇÃO
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('Frontend iniciado');
+    console.log('🚀 Frontend iniciado');
     checkLoginStatus();
     loadRooms();
     setupEventListeners();
@@ -20,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Event listeners
+// EVENT LISTENERS
 function setupEventListeners() {
     // Login com enter
     const loginEmail = document.getElementById('loginEmail');
@@ -59,15 +61,16 @@ function setupEventListeners() {
     }
 }
 
-// Funções de login com localStorage
+// FUNÇÕES DE LOGIN
 function checkLoginStatus() {
     const savedUser = localStorage.getItem('currentUser');
     if (savedUser) {
         currentUser = JSON.parse(savedUser);
         updateUIForLoggedUser();
-
-        if (document.getElementById('myReservationsTab') && 
-            document.getElementById('myReservationsTab').style.display !== 'none') {
+        
+        // Verificar se precisa carregar reservas
+        const myReservationsTab = document.getElementById('myReservationsTab');
+        if (myReservationsTab && myReservationsTab.style.display !== 'none') {
             loadMyReservations();
         }
     }
@@ -81,7 +84,7 @@ function login() {
         return;
     }
 
-    // Validação de email corrigida
+    // Validação de email melhorada
     if (!email.includes('@') || !email.includes('.')) {
         showToast('Digite um email válido (ex: nome@dominio.com)', 'warning');
         return;
@@ -91,9 +94,11 @@ function login() {
     localStorage.setItem('currentUser', JSON.stringify(currentUser));
     updateUIForLoggedUser();
     closeLoginModal();
+    
     const userName = email.split('@')[0];
     showToast(`Bem-vindo(a), ${userName}!`, 'success');
 
+    // Recarregar reservas
     loadMyReservations();
 }
 
@@ -128,7 +133,7 @@ function updateUIForLoggedUser() {
     }
 }
 
-// Funções de salas com API node
+// FUNÇÕES DE SALAS
 async function loadRooms() {
     const container = document.getElementById('roomsContainer');
     if (!container) return;
@@ -202,6 +207,8 @@ async function loadRooms() {
                     <button class="btn btn-primary btn-sm" onclick="loadRooms()">
                         Tentar novamente
                     </button>
+                    <br><br>
+                    <small>Verifique se o servidor Node está rodando em ${API_BASE_URL}</small>
                 </div>
             </div>
         `;
@@ -222,6 +229,12 @@ async function registerRoom() {
         return;
     }
 
+    // Botão loading
+    const submitBtn = document.querySelector('#roomForm button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = 'Cadastrando...';
+    submitBtn.disabled = true;
+
     try {
         const response = await fetch(`${API_BASE_URL}/rooms`, {
             method: 'POST',
@@ -232,9 +245,9 @@ async function registerRoom() {
         const result = await response.json();
 
         if (response.ok && result.success) {
-            showToast('Sala cadastrada com sucesso', 'success');
+            showToast('Sala cadastrada com sucesso!', 'success');
             document.getElementById('roomForm').reset();
-            loadRooms();
+            loadRooms(); // Recarregar lista
             showTab('rooms'); // Volta para a aba de salas
         } else {
             showToast('ERRO: ' + (result.error || 'Falha ao cadastrar'), 'error');
@@ -243,10 +256,13 @@ async function registerRoom() {
     } catch (error) {
         console.error('Erro: ', error);
         showToast('Erro de conexão com o servidor', 'error');
+    } finally {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
     }
 }
 
-// Funções de reservas
+// FUNÇÕES DE RESERVAS
 function prepareReservation(roomId) {
     if (!currentUser) {
         showToast('Faça login para reservar uma sala', 'warning');
@@ -282,7 +298,7 @@ async function loadRoomsForSelect() {
 
 async function createReservation() {
     if (!currentUser) {
-        showToast('Faça login antes', 'warning');
+        showToast('Faça login antes de reservar', 'warning');
         showLoginModal();
         return;
     }
@@ -311,10 +327,9 @@ async function createReservation() {
     };
 
     const submitBtn = document.querySelector('#reservationForm button[type="submit"]');
-    if (submitBtn) {
-        submitBtn.innerHTML = 'Processando...';
-        submitBtn.disabled = true;
-    }
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = 'Processando...';
+    submitBtn.disabled = true;
 
     try {
         const response = await fetch(`${API_BASE_URL}/reservations`, {
@@ -332,16 +347,14 @@ async function createReservation() {
             resetReservationForm();
             loadMyReservations();
         } else {
-            showToast(result.error || 'Falha na reserva', 'error');
+            showToast('ERRO' + (result.error || 'Falha na reserva'), 'error');
         }
     } catch (error) {
         console.error('ERRO: ', error);
         showToast('Erro de conexão com o servidor', 'error');
     } finally {
-        if (submitBtn) {
-            submitBtn.innerHTML = 'Confirmar reserva';
-            submitBtn.disabled = false;
-        }
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
     }
 }
 
@@ -377,6 +390,7 @@ async function loadMyReservations() {
             return;
         }
 
+        // Ordenar por data (mais recente primeiro)
         reservations.sort((a, b) => b.dataReserva.localeCompare(a.dataReserva));
 
         container.innerHTML = `
@@ -397,7 +411,7 @@ async function loadMyReservations() {
                                 <td><strong>${escapeHtml(res.idSala)}</strong></td>
                                 <td>${formatDate(res.dataReserva)}</td>
                                 <td>${res.horaInicio} - ${res.horaFim}</td>
-                                <td><span class="status-active">Ativa</span></td>
+                                <td><span class="badge bg-success">Ativa</span></td>
                                 <td>
                                     <button class="btn-cancel" onclick="cancelReservation('${res.id}')">
                                         Cancelar
@@ -425,10 +439,10 @@ async function cancelReservation(reservationId) {
         if (response.ok) {
             showToast('Reserva cancelada com sucesso!', 'success');
             loadMyReservations();
-            loadRooms();
+            loadRooms(); // Recarregar salas para atualizar disponibilidade
         } else {
             const result = await response.json();
-            showToast(result.error || 'Erro ao cancelar reserva', 'error');
+            showToast('ERRO' + (result.error || 'Erro ao cancelar reserva'), 'error');
         }
     } catch (error) {
         console.error('ERRO: ', error);
@@ -446,7 +460,7 @@ function resetReservationForm() {
     if (roomSelect) roomSelect.value = '';
 }
 
-// Funções de UI
+// FUNÇÕES DE UI
 function showTab(tabName) {
     const tabMap = {
         'rooms': 'roomsTab',
@@ -456,7 +470,8 @@ function showTab(tabName) {
     };
 
     // Esconder todas as abas
-    Object.values(tabMap).forEach(tabId => {
+    const tabIds = ['roomsTab', 'myReservationsTab', 'newReservationTab', 'newRoomTab'];
+    tabIds.forEach(tabId => {
         const element = document.getElementById(tabId);
         if (element) element.style.display = 'none';
     });
@@ -464,6 +479,22 @@ function showTab(tabName) {
     // Mostrar a aba selecionada
     const selectedTab = document.getElementById(tabMap[tabName]);
     if (selectedTab) selectedTab.style.display = 'block';
+
+    // Atualizar estilo dos botões
+    const buttons = document.querySelectorAll('.nav-tabs button');
+    const tabNames = {
+        'rooms': 'Salas',
+        'myReservations': 'Minhas Reservas',
+        'newReservation': 'Nova Reserva',
+        'newRoom': 'Cadastrar Sala'
+    };
+    
+    buttons.forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.textContent.includes(tabNames[tabName])) {
+            btn.classList.add('active');
+        }
+    });
 
     // Ações específicas
     if (tabName === 'myReservations') {
@@ -505,7 +536,7 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
-// Funções utilitárias
+// FUNÇÕES UTILITÁRIAS
 function escapeHtml(str) {
     if (!str) return '';
     return str
@@ -541,6 +572,8 @@ async function checkServerHealth() {
 setTimeout(async () => {
     const isOnline = await checkServerHealth();
     if (!isOnline) {
-        showToast('Servidor não está online. Execute node server.js', 'warning');
+        showToast('Servidor não está online. Execute "npm start" na pasta node-server', 'warning');
+    } else {
+        console.log('Servidor conectado!');
     }
 }, 1000);
