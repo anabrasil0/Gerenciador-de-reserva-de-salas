@@ -12,10 +12,10 @@ package com.projeto.model;
 public class Reserva {
 
     private String id;
+    private String localizacao;
     private String dataReserva;
     private String horaInicio;
-    private String horaFim;
-    private String idSala; 
+    private String horaFim; 
     private String identificacaoCadastro;
 
     private Sala Sala;
@@ -29,6 +29,14 @@ public class Reserva {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getLocalizacao() {
+        return localizacao;
+    }
+
+    public void setLocalizacao(String localizacao) {
+        this.localizacao = localizacao;
     }
 
     public String getDataReserva() {
@@ -53,14 +61,6 @@ public class Reserva {
 
     public void setHoraFim(String horaFim) {
         this.horaFim = horaFim;
-    }
-
-    public String getIdSala() {
-        return idSala;
-    }
-
-    public void setIdSala(String idSala) {
-        this.idSala = idSala;
     }
 
     public String getIdentificacaoCadastro() {

@@ -12,8 +12,7 @@ package com.projeto.model;
 public class Sala {
     
     private String id;
-    private String nome;
-    private String localizacao; //ex:sala cb-202
+    private String localizacao; //a localização sera o id da sala
     private String tipo;           //sala de aula, laboratório
     private Boolean possuiComputadores;
 
@@ -21,7 +20,7 @@ public class Sala {
     public Sala() {
     }
 
-    // --- GETTERS E SETTERS ---
+    // --- GETTERS E SETTERS -
 
     public String getId() {
         return id;
@@ -30,15 +29,7 @@ public class Sala {
     public void setId(String id) {
         this.id = id;
     }
-
-    public String getNome() {
-        return nome;
-    }
-
-    public void setNome(String nome) {
-        this.nome = nome;
-    }
-
+    
     public String getLocalizacao() {
         return localizacao;
     }

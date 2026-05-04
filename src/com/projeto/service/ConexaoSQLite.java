@@ -28,7 +28,6 @@ public class ConexaoSQLite {
     public static void criarTabelas() {
         String sqlSala = "CREATE TABLE IF NOT EXISTS sala (" +
                          "id TEXT PRIMARY KEY, " +
-                         "nome TEXT, " +
                          "localizacao TEXT, " +
                          "tipo TEXT, " +
                          "possuiComputadores BOOLEAN" +

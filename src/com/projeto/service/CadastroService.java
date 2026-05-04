@@ -34,7 +34,7 @@ public class CadastroService {
 
             while (rs.next()) { //vai para a próxima linha de usuário
                 System.out.println("email: " + rs.getString("email") + 
-                                   " | Tipo: " + rs.getString("professor"));
+                                   " | Tipo: " + rs.getString("tipo"));
             }
         } catch (Exception e) {
             System.out.println("Erro ao buscar usuários: " + e.getMessage());

@@ -1,0 +1,330 @@
+/* styles.css - Versão Corrigida */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f9f2de;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: #f9f2de;
+    padding: 20px;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #e8c03b;
+}
+
+.user-info {
+    text-align: right;
+}
+
+.user-info span {
+    margin-right: 10px;
+    font-weight: bold;
+    color: #e8c03b;
+}
+
+/* Abas */
+.nav-tabs {
+    border-bottom: 1px solid #e8c03b;
+}
+
+.nav-tabs button {
+    background: none;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s;
+}
+
+.nav-tabs button:hover {
+    background: #be9d30;
+    color: white;
+}
+
+.nav-tabs button.active {
+    border-bottom: 2px solid #e8c03b;
+    color: #e8c03b;
+    font-weight: bold;
+}
+
+/* Cards das salas */
+.room-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+    transition: transform 0.3s, box-shadow 0.3s;
+    background: white;
+}
+
+.room-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.room-card h4 {
+    color: #e8c03b;
+    margin-bottom: 10px;
+}
+
+.room-card p {
+    margin: 5px 0;
+    color: #555;
+}
+
+.room-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    margin-top: 10px;
+}
+
+.badge-computer {
+    background: #28a745;
+    color: white;
+}
+
+.badge-no-computer {
+    background: #dc3545;
+    color: white;
+}
+
+/* Tabela de reservas */
+.reservations-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.reservations-table th,
+.reservations-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.reservations-table th {
+    background: #e8c03b;
+    color: #333;
+}
+
+.reservations-table tr:hover {
+    background: #f9f2de;
+}
+
+.btn-cancel {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn-cancel:hover {
+    background: #c82333;
+}
+
+/* Modal */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background: #f9f2de;
+    margin: 15% auto;
+    width: 350px;
+    border-radius: 8px;
+    animation: slideDown 0.3s ease;
+}
+
+.modal-header {
+    padding: 15px;
+    border-bottom: 1px solid #e8c03b;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.close {
+    font-size: 28px;
+    cursor: pointer;
+    color: #aaa;
+}
+
+.close:hover {
+    color: #555;
+}
+
+/* Toast notification */
+.toast-notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #333;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    z-index: 2000;
+    animation: slideInRight 0.3s ease;
+}
+
+.toast-success {
+    background: #28a745;
+}
+
+.toast-error {
+    background: #dc3545;
+}
+
+.toast-warning {
+    background: #ffc107;
+    color: #333;
+}
+
+/* Formulários */
+.form-control {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #e8c03b;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #be9d30;
+}
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-primary {
+    background: #e8c03b;
+    color: #333;
+}
+
+.btn-primary:hover {
+    background: #be9d30;
+}
+
+.btn-success {
+    background: #28a745;
+    color: white;
+}
+
+.btn-success:hover {
+    background: #1e7e34;
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+}
+
+/* Loading */
+.loading {
+    text-align: center;
+    padding: 40px;
+}
+
+.spinner {
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #e8c03b;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+    
+    .header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .nav-tabs button {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+    
+    .room-card {
+        margin-bottom: 15px;
+    }
+    
+    .reservations-table {
+        font-size: 12px;
+    }
+    
+    .reservations-table th,
+    .reservations-table td {
+        padding: 8px;
+    }
+}

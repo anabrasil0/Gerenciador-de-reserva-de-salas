@@ -5,6 +5,7 @@ package com.projeto.service;
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
+import com.projeto.model.Cadastro;
 import com.projeto.model.Sala;
 import com.projeto.service.ConexaoSQLite;
 import java.sql.Connection;
@@ -16,27 +17,29 @@ import java.sql.ResultSet;
  */
 public class SalaService {
     public void cadastrarSala(Sala novaSala) {
-        // O comando SQL INSERT ensina onde cada dado vai entrar (os ? são espaços vazios)
-        String sql = "INSERT INTO sala (id, nome, localizacao, tipo, possuiComputadores) VALUES (?, ?, ?, ?, ?)";
+       
+            // O comando SQL INSERT ensina onde cada dado vai entrar (os ? são espaços vazios)
+            String sql = "INSERT INTO sala (id, localizacao, tipo, possuiComputadores) VALUES (?, ?, ?, ?)";
 
-        try (Connection conn = ConexaoSQLite.conectar();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            try (Connection conn = ConexaoSQLite.conectar();
+                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            // Preenchendo os ? com os dados do objeto novaSala
-            pstmt.setString(1, novaSala.getId());
-            pstmt.setString(2, novaSala.getNome());
-            pstmt.setString(3, novaSala.getLocalizacao());
-            pstmt.setString(4, novaSala.getTipo());
-            pstmt.setBoolean(5, novaSala.getPossuiComputadores());
+                // Preenchendo os ? com os dados do objeto novaSala
+                pstmt.setString(1, novaSala.getId());
+                pstmt.setString(2, novaSala.getLocalizacao());
+                pstmt.setString(3, novaSala.getTipo());
+                pstmt.setBoolean(4, novaSala.getPossuiComputadores());
+                
 
-            // Executa o salvamento
-            pstmt.executeUpdate();
-            System.out.println("Sucesso: Sala salva no BANCO DE DADOS!");
+                // Executa o salvamento
+                pstmt.executeUpdate();
+                System.out.println("Sucesso: Sala salva no BANCO DE DADOS!");
 
-        } catch (Exception e) {
-            System.out.println("Erro ao salvar sala no banco: " + e.getMessage());
-        }
-    }
+            } catch (Exception e) {
+                System.out.println("Erro ao salvar sala no banco: " + e.getMessage());
+            }
+        } 
+
 
     public void listarSalas() {
         System.out.println("\n--- Lista de Salas no Banco de Dados ---");
@@ -50,9 +53,8 @@ public class SalaService {
             // O while(rs.next()) percorre linha por linha dos resultados do banco
             while (rs.next()) {
                 String temPc = rs.getBoolean("possuiComputadores") ? "Sim" : "Não";
-                System.out.println("ID: " + rs.getString("id") + 
-                                   " | Nome: " + rs.getString("nome") + 
-                                   " | Local: " + rs.getString("localizacao") + 
+                System.out.println ("Id: " + rs.getString("id") +
+                                   "Local: " + rs.getString("localizacao") +
                                    " | Tipo: " + rs.getString("tipo") +
                                    " | PC: " + temPc);
             }
