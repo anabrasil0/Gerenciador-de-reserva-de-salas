@@ -8,6 +8,7 @@ import com.projeto.model.Reserva;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 /**
  *
  * @author juuli
@@ -17,13 +18,13 @@ public class ReservaService {
     // --- NOVO MÉTODO PARA VERIFICAR CONFLITOS ---
     public boolean existeConflito(Reserva novaReserva) {
         // A lógica: existe conflito se (Início1 < Fim2) E (Fim1 > Início2)
-        String sql = "SELECT COUNT(*) FROM reserva WHERE IdSala = ? AND dataReserva = ? "
+        String sql = "SELECT COUNT(*) FROM reserva WHERE id = ? AND dataReserva = ? "
                    + "AND (horaInicio < ? AND horaFim > ?)";
 
         try (Connection conn = ConexaoSQLite.conectar();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setString(1, novaReserva.getIdSala());
+            pstmt.setString(1, novaReserva.getId());
             pstmt.setString(2, novaReserva.getDataReserva());
             pstmt.setString(3, novaReserva.getHoraFim());    // Fim da nova
             pstmt.setString(4, novaReserva.getHoraInicio()); // Início da nova
@@ -43,19 +44,25 @@ public class ReservaService {
 // Método para salvar a reserva no banco
     public void cadastrarReserva(Reserva novaReserva) {
       
-        if (existeConflito(novaReserva)) {
-            System.out.println("ERRO: Já existe uma reserva para esta sala neste horário!");
-            return; // Interrompe o método e não salva
+        final int LIMITE_TOTAL = 10; // Limite máximo de reservas simultâneas no sistema
+
+        // 1. Validar o limite TOTAL do usuário
+        int totalReservas = contarTotalReservasUsuario(novaReserva.getIdentificacaoCadastro());
+
+        if (totalReservas >= LIMITE_TOTAL) {
+            System.out.println("ERRO: O usuário " + novaReserva.getIdentificacaoCadastro() + 
+                               " já atingiu o limite máximo de " + LIMITE_TOTAL + " reservas no sistema!");
+            return; // Interrompe o cadastro
         }
         
         // Comando SQL para inserir os dados (os ? são os espaços que vamos preencher)
-        String sql = "INSERT INTO reserva (id, IdSala, identificacaoCadastro, dataReserva, horaInicio, horaFim) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO reserva (id, localizacao, identificacaoCadastro, dataReserva, horaInicio, horaFim) VALUES (?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = ConexaoSQLite.conectar();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, novaReserva.getId());
-            pstmt.setString(2, novaReserva.getIdSala());
+            pstmt.setString(2, novaReserva.getLocalizacao());
             pstmt.setString(3, novaReserva.getIdentificacaoCadastro());
             pstmt.setString(4, novaReserva.getDataReserva());
             pstmt.setString(5, novaReserva.getHoraInicio());
@@ -82,8 +89,8 @@ public class ReservaService {
 
             // Percorre cada linha que o banco devolveu
             while (rs.next()) {
-                System.out.println("ID Reserva: " + rs.getString("id") + 
-                                   " | Sala: " + rs.getString("idSala") + 
+                System.out.println("Id: " + rs.getString("id") +  
+                                   " | Localizacao: " + rs.getString("localizacao") +
                                    " | Usuário: " + rs.getString("identificacaoCadastro") +
                                    " | Data: " + rs.getString("dataReserva") + 
                                    " | Horário: " + rs.getString("horaInicio") + " às " + rs.getString("horaFim"));
@@ -95,26 +102,46 @@ public class ReservaService {
     }   
     
     // Método para excluir uma reserva pelo ID
-    public void cancelarReserva(String idReserva) {
+    public void cancelarReserva(String id) {
         // Comando SQL para deletar a linha específica
         String sql = "DELETE FROM reserva WHERE id = ?";
 
         try (Connection conn = ConexaoSQLite.conectar();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setString(1, idReserva);
+            pstmt.setString(1, id);
 
             // executeUpdate retorna o número de linhas afetadas
             int linhasAfetadas = pstmt.executeUpdate();
 
             if (linhasAfetadas > 0) {
-                System.out.println("Sucesso: Reserva " + idReserva + " foi cancelada!");
+                System.out.println("Sucesso: Reserva " + id + " foi cancelada!");
             } else {
-                System.out.println("Aviso: Nenhuma reserva encontrada com o ID: " + idReserva);
+                System.out.println("Aviso: Nenhuma reserva encontrada com o ID: " + id);
             }
 
         } catch (Exception e) {
             System.out.println("Erro ao cancelar reserva: " + e.getMessage());
         }
+    }
+
+    private int contarTotalReservasUsuario(String usuarioId) {
+        // SQL super simples: Conta tudo que pertence a este usuário
+        String sql = "SELECT COUNT(*) FROM reserva WHERE identificacaoCadastro = ?";
+
+        try (Connection conn = ConexaoSQLite.conectar();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, usuarioId);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1); // Retorna o total de reservas da pessoa
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Erro ao contar total de reservas: " + e.getMessage());
+        }
+        return 0;
     }
 }
