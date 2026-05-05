@@ -1,0 +1,21 @@
+{
+  "name": "salao-reservas-server",
+  "version": "1.0.0",
+  "description": "Sistema de reserva de salas - Servidor Node.js",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "sqlite3": "^5.1.6",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "keywords": ["reservas", "salas", "nodejs", "sqlite"],
+  "author": "Seu Nome",
+  "license": "ISC"
+}
