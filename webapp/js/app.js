@@ -1,8 +1,12 @@
+const { response } = require("express");
+
 // Configuração do servidor
 const API_BASE_URL = 'http://localhost:3000/api';
 
 // Estado da app
 let currentUser = null;
+let currentCalendarDate = new Date();
+let currentCalendarReservations = [];
 
 // INICIALIZAÇÃO
 document.addEventListener('DOMContentLoaded', () => {
@@ -216,7 +220,6 @@ async function loadRooms() {
 async function registerRoom() {
     const roomData = {
         id: document.getElementById('roomId').value.trim(),
-        nome: document.getElementById('roomName').value.trim(),
         localizacao: document.getElementById('roomLocation').value.trim(),
         tipo: document.getElementById('roomType').value,
         possuiComputadores: document.getElementById('roomHasComputers').checked
@@ -268,19 +271,27 @@ function prepareReservation(roomId) {
         return;
     }
 
-    const select = document.getElementById('reservationRoomId');
-    if (select) {
-        fetch(`${API_BASE_URL}/rooms/${roomId}`)
-            .then(response => response.json())
-            .then(room => {
-                select.value = room.localizacao;
-            })
-            .catch(() => {
-                select.value = roomId; // fallback
-            });
-    }
-
     showTab('newReservation');
+
+    //preenche com ID sala
+    setTimeout(async ()=> {
+        await loadRoomsForSelect();
+        const select = document.getElementById('reservationRoomId');
+        if(select) {
+            //busca a localização da sala usando o ID
+             try {
+                const response = await fetch(`${API_BASE_URL}/rooms`);
+                const rooms = await response.json();
+                const room = rooms.find(r => r.id === roomId);
+                if (room) {
+                    select.value = room.localizacao;
+                }
+            } catch (error) {
+                console.error('Erro ao buscar sala:', error);
+            }
+        }
+    }, 100);
+    
     document.getElementById('newReservationTab').scrollIntoView({ behavior: 'smooth' });
 }
 
@@ -358,6 +369,9 @@ async function createReservation() {
             resetReservationForm();
             loadMyReservations();
             loadRooms();
+            if(document.getElementById('calendarTab').style.display !== 'none') {
+                loadCalendar();
+            }
         } else {
             showToast(result.error || 'Falha na reserva', 'error');
         }
@@ -454,6 +468,9 @@ async function cancelReservation(reservationId) {
             showToast('Reserva cancelada com sucesso!', 'success');
             loadMyReservations();
             loadRooms(); // Recarregar salas para atualizar disponibilidade
+            if(document.getElementById('calendarTab').style.display !== 'none') {
+                loadCalendar();
+            }
         } else {
             const result = await response.json();
             showToast('ERRO' + (result.error || 'Erro ao cancelar reserva'), 'error');
@@ -474,17 +491,270 @@ function resetReservationForm() {
     if (roomSelect) roomSelect.value = '';
 }
 
+//FUNÇÕES DO CALENDÁRIO 
+async function loadCalendar() {
+    const container = document.getElementById('calendarContainer');
+    if(!container) return;
+
+    const roomFilter= document.getElementById('calendarRoomFilter');
+    const selectedRoom = roomFilter ? roomFilter.value : 'all';
+
+    container.innerHTML = `
+        <div class="loading-calendar">
+            <div class="spinner"></div>
+            <p>Carregando calendário...</p>
+        </div>`;
+
+    try {
+        const year = currentCalendarDate.getFullYear();
+        const month = currentCalendarDate.getMonth() + 1;
+
+        let url = `${API_BASE_URL}/calendar/reservations?year=${year}&month=${month}`;
+
+        if(selectedRoom !== 'all') {
+            url +=  `&roomId=${selectedRoom}`;
+        }
+
+        const response = await fetch(url);
+
+        if(!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const reservations = await response.json();
+        currentCalendarReservations = reservations;
+
+        renderCalendar(year, month, reservations);
+    }catch (error) {
+        console.error('Error loading calendar:', error);
+        container.innerHTML = '<p class="text-danger">Erro ao carregar calendário. Verifique o status do servidor. </p>';
+    }
+}
+
+function renderCalendar(year,month, reservations) {
+    const container = document.getElementById('calendarContainer');
+    const firstDay = new Date(year, month - 1, 1);
+    const lastDay = new Date(year, month, 0);
+    let startDayOfWeek = firstDay.getDay();
+    const daysInMonth = lastDay.getDate();
+
+    //ajuste para colocar segunda como o primeiro dia da semana
+    startDayOfWeek = startDayOfWeek === 0 ? 6 : startDayOfWeek - 1;
+
+    const prevMonthLastDay = new Date(year, month - 1, 0).getDate();
+
+    let calendarHTML = `
+        <div class="calendar-container">
+            <div class="calendar-header">
+                <h3>${getMonthName(month)} ${year}</h3>
+                <div class="calendar-nav">
+                    <button onclick="changeMonth(-1)">◀ Mês anterior</button>
+                    <button onclick="changeMonth(0)">📅 Hoje</button>
+                    <button onclick="changeMonth(1)">Próximo mês ▶</button>
+                </div>
+            </div>
+            <div class="calendar-grid">
+    `;
+
+    const weekdays = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+    weekdays.forEach(day => {
+        calendarHTML += '<div class="calendar-weekday">${day}</div>';
+    });
+
+    let nextMonthCounter = 1;
+    const today = new Date();
+    const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month -1;
+    const currentDay = today.getDate();
+
+    //dias do mês anterior
+    for (let i = 0; i < startDayOfWeek; i++) {
+        const prevMonthDay = prevMonthLastDay - startDayOfWeek + i + 1;
+        calendarHTML += `
+            <div class="calendar-day other-month">
+                <div class="day-number">${prevMonthDay}</div>
+            </div>
+        `;
+    }
+
+    //dias do mês atual
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const dayReservations = reservations.filter(r => r.dataReserva === dateStr);
+
+        const isToday = isCurrentMonth && day === currentDay;
+        const todayClass = isToday ? 'today' : '';
+
+        calendarHTML += `
+            <div class="calendar-day ${todayClass}" onclick="showDayReservations('${dateStr}')">
+                <div class="day-number">${day}</div>
+        `;
+
+        dayReservations.slice(0, 2).forEach(res => {
+            const isOwnReservation = currentUser && currentUser.email === res.identificacaoCadastro;
+            const ownClass = isOwnReservation ? 'own reservation' : '';
+            const timeRange =  `${res.horaInicio.substring(0,5)}-${res.horaFim.substring(0,5)}`;
+            
+            calendarHTML += `
+                <div class="reservation-indicator ${ownClass}" onclick="event.stopPropagation(); showReservationDetail(${JSON.stringify(res).replace(/"/g, '&quot;')})">
+                    ${timeRange} ${res.localizacao}
+                </div>
+            `;
+        });
+
+        if(dayReservations.length > 2) {
+            calendarHTML += `
+                <div class="more-indicator" onclick="event.stopPropagation(); showDayReservations('${dateStr}')">
+                    +${dayReservations.length - 2} mais...
+                </div>
+            `;
+        }
+
+        calendarHTML += '</div>';
+    }
+
+    //dias do próximo mês
+    const totalDaysShown = startDayOfWeek + daysInMonth;
+    const remainingCells = 42 - totalDaysShown;
+    for (let i = 1; i <= remainingCells; i++) {
+         calendarHTML += `
+            <div class="calendar-day other-month">
+                <div class="day-number">${nextMonthCounter++}</div>
+            </div>
+        `;
+    }
+
+    calendarHTML += `
+            </div>
+        </div>
+    `;
+
+    container.innerHTML = calendarHTML;
+}
+
+function changeMonth(delta) {
+    if (delta === 0) {
+        currentCalendarDate = new Date();
+    } else {
+        currentCalendarDate.setMonth(currentCalendarDate.getMonth() + delta);
+    }
+    loadCalendar();
+}
+
+async function showDayReservations(dateStr) {
+    const roomFilter = document.getElementById('calendarRoomFilter');
+    const selectedRoom = roomFilter ? roomFilter.value : 'all';
+
+    try {
+        let url = `${API_BASE_URL}/calendar/day/${dateStr}`;
+        if(selectedRoom !== 'all') {
+            url += `?roomId=${selectedRoom}`;
+        }
+
+        const response = await fetch(url);
+        const reservations = await response.json();
+
+        if(!reservations || reservations.length === 0) {
+            showToast(`Nenhuma reserva para ${formatDate(dateStr)}`, 'info');
+            return;
+        }
+
+        const modalBody = document.getElementById('reservationDetailBody');
+        const formattedDate = formatDate(dateStr);
+
+        modalBody.innerHTML = `
+            <h4>Reservas do dia ${formattedDate}</h4>
+            <div class="day-reservations-list">
+                ${reservations.map(res => {
+                    const isOwnReservation = currentUser && currentUser.email === res.identificacaoCadastro;
+                    return `
+                        <div style="border-bottom: 1px solid #dee2e6; padding: 10px 0;">
+                            <p><strong>Sala:</strong> ${escapeHtml(res.localizacao)}</p>
+                            <p><strong>Horário:</strong> ${res.horaInicio.substring(0,5)} - ${res.horaFim.substring(0,5)}</p>
+                            <p><strong>Reservado por:</strong> ${escapeHtml(res.identificacaoCadastro)}</p>
+                            ${isOwnReservation ? `
+                                <button class="btn btn-danger btn-sm mt-2" onclick="cancelReservation('${res.id}'); closeReservationDetail();">
+                                    Cancelar minha reserva
+                                </button>
+                            ` : ''}
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        `;
+
+        document.getElementById('reservationDetailModal').style.display = 'flex';
+    }catch (error) {
+        console.error('Error loading day reservations:', error);
+        showToast('Erro ao carregar as reservas do dia', 'error');
+    }
+}
+
+function showReservationDetail(reservation) {
+    const modalBody = document.getElementById('reservationDetailBody');
+    const isOwnReservation = currentUser && currentUser.email === reservation.identificacaoCadastro;
+
+    modalBody.innerHTML = `
+        <div class="reservation-detail">
+            <p><strong>Sala:</strong> ${escapeHtml(reservation.localizacao)}</p>
+            <p><strong>Data:</strong> ${formatDate(reservation.dataReserva)}</p>
+            <p><strong>Horário:</strong> ${reservation.horaInicio.substring(0,5)} - ${reservation.horaFim.substring(0,5)}</p>
+            <p><strong>Reservado por:</strong> ${escapeHtml(reservation.identificacaoCadastro)}</p>
+            <p><strong>Tipo da sala:</strong> ${escapeHtml(reservation.sala_tipo || 'Não informado')}</p>
+            ${isOwnReservation ? `
+                <hr>
+                <button class="btn btn-danger btn-sm w-100" onclick="cancelReservation('${reservation.id}'); closeReservationDetail();">
+                    Cancelar minha reserva
+                </button>
+            ` : ''}
+        </div>
+    `;
+
+    document.getElementById('reservationDetailModal').style.display= 'flex';
+}
+
+function closeReservationDetail() {
+    document.getElementById('reservationDetailModal').style.display='none';
+}
+
+function getMonthName(month) {
+    const months = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho','Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+    return months[month - 1];
+}
+
+async function loadRoomsForCalendarFilter() {
+    try {
+        const response = await fetch (`${API_BASE_URL}/rooms`);
+
+        if(!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const rooms = await response.json();
+        const filter = document.getElementById('calendarRoomFilter');
+
+        if (filter && rooms) {
+            filter.innerHTML = '<option value="all">Todas as salas</option>';
+            rooms.forEach(room => {
+                filter.innerHTML += `<option value="${room.id}">${escapeHtml(room.id)} - ${escapeHtml(room.localizacao)}</option>`;
+            });
+        }
+    } catch (error) {
+        console.error('Error loading rooms for filter', error);
+    }
+}
+
 // FUNÇÕES DE UI
 function showTab(tabName) {
     const tabMap = {
         'rooms': 'roomsTab',
         'myReservations': 'myReservationsTab',
         'newReservation': 'newReservationTab',
-        'newRoom': 'newRoomTab'
+        'newRoom': 'newRoomTab',
+        'calendar': 'calendarTab'
     };
 
     // Esconder todas as abas
-    const tabIds = ['roomsTab', 'myReservationsTab', 'newReservationTab', 'newRoomTab'];
+    const tabIds = ['roomsTab', 'myReservationsTab', 'newReservationTab', 'newRoomTab', 'calendarTab'];
     tabIds.forEach(tabId => {
         const element = document.getElementById(tabId);
         if (element) element.style.display = 'none';
@@ -500,7 +770,8 @@ function showTab(tabName) {
         'rooms': 'Salas',
         'myReservations': 'Minhas Reservas',
         'newReservation': 'Nova Reserva',
-        'newRoom': 'Cadastrar Sala'
+        'newRoom': 'Cadastrar Sala',
+        'calendar': 'Calendário'
     };
     
     buttons.forEach(btn => {
@@ -515,6 +786,9 @@ function showTab(tabName) {
         loadMyReservations();
     } else if (tabName === 'newReservation') {
         loadRoomsForSelect();
+    } else if (tabName === 'calendar') {
+        loadRoomsForCalendarFilter();
+        loadCalendar();
     }
 }
 

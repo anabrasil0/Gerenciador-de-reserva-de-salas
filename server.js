@@ -146,7 +146,119 @@ app.get('/api/reservations/user/:email', (req, res) => {
     });
 });
 
-// RESERVAS - POST (CORRIGIDO com validação)
+//ORGANIZAÇÃO CALENDÁRIO
+//pega reservas para mês/sala específico
+app.get('/api/calendar/reservations', (req, res) => {
+    const { ano, mes, idSala} = req.query;
+
+    if (!ano || !mes) {
+        return res.status(400).json({erro: 'ano e mês são obrigatórios'});
+    }
+
+    //constrói dados mês
+    const startDate = `${ano}-${String(mes).padStart(2, '0')}-01`;
+    const lastDate = new Date(parseInt(ano), parseInt(mes), 0).getDate();
+    const endDate = `${ano}-${String(mes).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+
+    let query =
+    `
+        SELECT 
+            r.id,
+            r.dataReserva,
+            r.horaInicio,
+            r.horaFim,
+            r.identificacaoCadastro,
+            s.id as sala_id,
+            s.localizacao,
+            s.tipo as sala_tipo
+        FROM reservas r
+        JOIN salas s ON r.localizacao = s.localizacao
+        WHERE r.dataReserva BETWEEN ? AND ?
+    `;
+    let params = [startDate, endDate];
+
+    if(idSala && idSala != 'all') {
+        query += ` AND s.id = ?`;
+        params.push(idSala);
+    }
+
+    query += ' ORDER BY r.dataReserva, r.horaInicio';
+
+    db.all(query, params, (err, rows) => {
+        if(err) {
+            console.error('Erro na busca de informações do calendário', err);
+            return res.status(500).json({ error: err.message });
+        }
+        res.json(rows || []);
+    });
+});
+
+//busca reservas para sala e dia específico
+app.get('/api/calendar/day/:date', (req, res) => {
+    const { date } = req.params;
+    const {idSala} = res.query;
+
+    let query = `
+        SELECT 
+            r.id,
+            r.dataReserva,
+            r.horaInicio,
+            r.horaFim,
+            r.identificacaoCadastro,
+            s.id as sala_id,
+            s.localizacao,
+            s.tipo as sala_tipo
+        FROM reservas r
+        JOIN salas s ON r.localizacao = s.localizacao
+        WHERE r.dataReserva = ?
+    `;
+    let params = [date];
+
+    if(idSala && idSala != 'all') {
+        query += ' AND s.id = ?';
+        params.push(idSala);
+    }
+
+    query += ' ORDER BY r.horaInicio';
+
+    db.all(query, params, (err, rows) => {
+        if(err) {
+            console.error('Erro na busca de informações do calendário', err);
+            return res.status(500).json({ error: err.message });
+        }
+        res.json(rows || []);
+    });
+});
+
+//busca disponibilidade de sala para uma data específica
+app.get('/api/rooms/:idSala/disponivel', (res, res) => {
+    const { idSala } = req.params;
+    const { date } = req.query;
+
+    if(!date) {
+        return res.status(400).json({ error: 'Data é obrigatória'});
+    }
+
+    const query = `
+        SELECT horaInicio, horaFim
+        FROM reservas r
+        JOIN salas s ON r.localizacao = s.localizacao
+        WHERE s.id = ? AND r.dataReserva = ?
+        ORDER BY r.horaInicio
+    `;
+
+    db.all(query, [idSala, date], (err, rows) => {
+        if(err) {
+            console.error('Erro na busca por disponibilidade', err);
+            return res.status(500).json({ error: err.message });
+        }
+        res.json(rows || []);
+    });
+});
+//FIM CALENDÁRIO
+
+
+// RESERVAS - POST
 app.post('/api/reservations', (req, res) => {
     console.log('\nRecebida requisição de reserva:');
     console.log('Body:', req.body);
