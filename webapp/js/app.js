@@ -1,4 +1,3 @@
-const { response } = require("express");
 
 // Configuração do servidor
 const API_BASE_URL = 'http://localhost:3000/api';
@@ -13,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('Frontend iniciado');
     checkLoginStatus();
     loadRooms();
+    loadRoomsSummary();
     setupEventListeners();
 
     // Data mínima para reserva (hoje)
@@ -66,6 +66,7 @@ function setupEventListeners() {
 // FUNÇÕES DE LOGIN
 function checkLoginStatus() {
     const savedUser = localStorage.getItem('currentUser');
+    console.log('Verificando login:', savedUser);
     if (savedUser) {
         currentUser = JSON.parse(savedUser);
         updateUIForLoggedUser();
@@ -79,14 +80,15 @@ function checkLoginStatus() {
 }
 
 function login() {
-    const email = document.getElementById('loginEmail').value.trim();
+    const emailInput = document.getElementById('loginEmail');
+    const email = emailInput ? emailInput.value.trim() : '';
 
     if (!email) {
         showToast('Digite um email válido', 'warning');
         return;
     }
 
-    // Validação de email melhorada
+    // Validação de email 
     if (!email.includes('@') || !email.includes('.')) {
         showToast('Digite um email válido (ex: nome@dominio.com)', 'warning');
         return;
@@ -97,11 +99,15 @@ function login() {
     updateUIForLoggedUser();
     closeLoginModal();
     
+    // limpa o input
+    emailInput.value = '';
+    
     const userName = email.split('@')[0];
     showToast(`Bem-vindo(a), ${userName}!`, 'success');
 
     // Recarregar reservas
     loadMyReservations();
+    loadRooms(); // Recarregar salas para mostrar opções de reserva
 }
 
 function logout() {
@@ -114,7 +120,10 @@ function logout() {
     if (container) {
         container.innerHTML = '<p class="text-muted">Faça login para ver suas reservas</p>';
     }
+
+    loadRooms();
 }
+
 
 function updateUIForLoggedUser() {
     const userNameSpan = document.getElementById('userName');
@@ -160,7 +169,6 @@ async function loadRooms() {
 
         if (!rooms || rooms.length === 0) {
             container.innerHTML = `
-                <div class="col-12">
                     <div class="alert alert-warning text-center">
                         Nenhuma sala cadastrada ainda!
                         <br><br>
@@ -168,15 +176,13 @@ async function loadRooms() {
                             Cadastrar Primeira Sala
                         </button>
                     </div>
-                </div>
             `;
             return;
         }
 
         container.innerHTML = rooms.map(room => `
-            <div class="col-md-4 col-lg-3">
                 <div class="room-card">
-                    <h4>${escapeHtml(room.nome || 'Sala ' + room.id)}</h4>
+                    <h4>${escapeHtml(room.id || 'Sala')}</h4>
                     <p><strong>Localização:</strong> ${escapeHtml(room.localizacao || 'Não informada')}</p>
                     <p><strong>Tipo:</strong> ${escapeHtml(room.tipo || 'Sala de Aula')}</p>
                     <p><strong>ID:</strong> ${escapeHtml(room.id)}</p>
@@ -195,13 +201,11 @@ async function loadRooms() {
                         </button>
                     `}
                 </div>
-            </div>
         `).join('');
 
     } catch (error) {
         console.error('Erro ao carregar salas:', error);
         container.innerHTML = `
-            <div class="col-12">
                 <div class="alert alert-danger text-center">
                     Erro ao conectar com o servidor<br>
                     <small>Detalhe: ${error.message}</small>
@@ -212,21 +216,27 @@ async function loadRooms() {
                     <br><br>
                     <small>Verifique se o servidor Node está rodando em ${API_BASE_URL}</small>
                 </div>
-            </div>
         `;
     }
 }
 
 async function registerRoom() {
     const roomData = {
-        id: document.getElementById('roomId').value.trim(),
+        id: document.getElementById('roomId').value.trim().toUpperCase(),
         localizacao: document.getElementById('roomLocation').value.trim(),
         tipo: document.getElementById('roomType').value,
         possuiComputadores: document.getElementById('roomHasComputers').checked
     };
 
-    if (!roomData.id || !roomData.nome || !roomData.localizacao) {
-        showToast('Preencha ID, nome e localização da sala', 'warning');
+    // validação
+    if (!roomData.id) {
+        showToast('O campo ID é obrigatório', 'warning');
+        document.getElementById('roomId').focus();
+        return;
+    }
+    if (!roomData.localizacao) {
+        showToast('O campo Localização é obrigatório', 'warning');
+        document.getElementById('roomLocation').focus();
         return;
     }
 
@@ -237,19 +247,31 @@ async function registerRoom() {
     submitBtn.disabled = true;
 
     try {
+        console.log('Enviando dados da sala:', roomData);
+
         const response = await fetch(`${API_BASE_URL}/rooms`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
             body: JSON.stringify(roomData)
         });
 
         const result = await response.json();
+        console.log('Resposta do servidor:', result);
 
         if (response.ok && result.success) {
             showToast('Sala cadastrada com sucesso!', 'success');
-            document.getElementById('roomForm').reset();
-            loadRooms(); // Recarregar lista
-            showTab('rooms'); // Volta para a aba de salas
+            // Limpar formulário
+            resetRoomForm();
+            
+            // Recarregar listas
+            loadRooms(); // Recarregar salas na aba principal
+            loadRoomsSummary(); // Atualizar resumo
+            loadRoomsForSelect(); // Atualizar select de reservas
+            loadRoomsForCalendarFilter(); // Atualizar filtro do calendário
+    
         } else {
             showToast('ERRO: ' + (result.error || 'Falha ao cadastrar'), 'error');
         }
@@ -260,6 +282,74 @@ async function registerRoom() {
     } finally {
         submitBtn.innerHTML = originalText;
         submitBtn.disabled = false;
+    }
+}
+
+// função de reset do formulário de cadastro de sala
+function resetRoomForm() {
+    document.getElementById('roomId').value = '';
+    document.getElementById('roomLocation').value = '';
+    document.getElementById('roomType').value = 'Sala de Aula';
+    document.getElementById('roomHasComputers').checked = false;
+    document.getElementById('roomId').focus();
+}
+
+async function loadRoomsSummary() {
+    const container = document.getElementById('roomsSummary');
+    if (!container) {
+        console.log('Container de resumo de salas não encontrado');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/rooms`);
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const rooms = await response.json();
+        
+        if (!rooms || rooms.length === 0) {
+            container.innerHTML = '<div class="text-muted">Nenhuma sala cadastrada ainda</div>';
+            return;
+        }
+        
+        container.innerHTML = `
+            <div class="list-group list-group-flush">
+                ${rooms.slice(0, 5).map(room => `
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>${escapeHtml(room.id)}</strong>
+                            <br>
+                            <small class="text-muted">${escapeHtml(room.localizacao)}</small>
+                        </div>
+                        <span class="badge ${room.possuiComputadores ? 'bg-success' : 'bg-secondary'}">
+                            ${room.possuiComputadores ? 'sim' : 'não'}
+                        </span>
+                    </div>
+                `).join('')}
+            </div>
+            ${rooms.length > 5 ? `<div class="text-center mt-2">
+                <small class="text-muted">+ ${rooms.length - 5} outras salas...</small>
+            </div>` : ''}
+        `;
+        
+    } catch (error) {
+        console.error('Erro ao carregar resumo:', error);
+        container.innerHTML = '<div class="text-danger">Erro ao carregar salas</div>';
+    }
+}
+
+// Verifica se o servidor está online antes de tentar cadastrar
+async function checkServerBeforeRegister() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/health`);
+        const data = await response.json();
+        return data.status === 'online';
+    } catch (error) {
+        console.error('Servidor offline:', error);
+        return false;
     }
 }
 
@@ -298,6 +388,10 @@ function prepareReservation(roomId) {
 async function loadRoomsForSelect() {
     try {
         const response = await fetch(`${API_BASE_URL}/rooms`);
+        if(!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
         const rooms = await response.json();
         const select = document.getElementById('reservationRoomId');
 
@@ -309,6 +403,10 @@ async function loadRoomsForSelect() {
         }
     } catch (error) {
         console.error('Erro ao carregar salas', error);
+        const select = document.getElementById('reservationRoomId');
+        if(select) {
+            select.innerHTML = '<option value="">Erro ao carregar salas</option>';
+        }
     }
 }
 
@@ -368,7 +466,6 @@ async function createReservation() {
             showToast('Reserva realizada com sucesso!', 'success');
             resetReservationForm();
             loadMyReservations();
-            loadRooms();
             if(document.getElementById('calendarTab').style.display !== 'none') {
                 loadCalendar();
             }
@@ -533,6 +630,8 @@ async function loadCalendar() {
 
 function renderCalendar(year,month, reservations) {
     const container = document.getElementById('calendarContainer');
+    if (!container) return;
+
     const firstDay = new Date(year, month - 1, 1);
     const lastDay = new Date(year, month, 0);
     let startDayOfWeek = firstDay.getDay();
@@ -549,7 +648,7 @@ function renderCalendar(year,month, reservations) {
                 <h3>${getMonthName(month)} ${year}</h3>
                 <div class="calendar-nav">
                     <button onclick="changeMonth(-1)">◀ Mês anterior</button>
-                    <button onclick="changeMonth(0)">📅 Hoje</button>
+                    <button onclick="changeMonth(0)">Hoje</button>
                     <button onclick="changeMonth(1)">Próximo mês ▶</button>
                 </div>
             </div>
@@ -558,7 +657,7 @@ function renderCalendar(year,month, reservations) {
 
     const weekdays = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
     weekdays.forEach(day => {
-        calendarHTML += '<div class="calendar-weekday">${day}</div>';
+        calendarHTML += `<div class="calendar-weekday">${day}</div>`;
     });
 
     let nextMonthCounter = 1;
@@ -762,9 +861,13 @@ function showTab(tabName) {
 
     // Mostrar a aba selecionada
     const selectedTab = document.getElementById(tabMap[tabName]);
-    if (selectedTab) selectedTab.style.display = 'block';
+    if (selectedTab) {
+        selectedTab.style.display = 'block';
+    } else {
+        console.error('Aba não encontrada:', tabName);
+    }
 
-    // Atualizar estilo dos botões
+    // AtuaselectedTab.style.display = 'block';lizar estilo dos botões
     const buttons = document.querySelectorAll('.nav-tabs button');
     const tabNames = {
         'rooms': 'Salas',
@@ -795,9 +898,14 @@ function showTab(tabName) {
 function showLoginModal() {
     const modal = document.getElementById('loginModal');
     if (modal) {
-        modal.style.display = 'block';
+        modal.style.display = 'flex';
         const emailInput = document.getElementById('loginEmail');
-        if (emailInput) emailInput.focus();
+        if (emailInput) {
+            emailInput.focus();
+            emailInput.value = '';
+        }
+    } else {
+        console.error('Modal de login não encontrado!');
     }
 }
 
@@ -807,6 +915,12 @@ function closeLoginModal() {
 }
 
 function showToast(message, type = 'info') {
+
+    //ignora login se já estiver online
+    if(message.includes('login') && type === 'warning' && currentUser) {
+        return;
+    }
+    
     let toast = document.getElementById('customToast');
     if (!toast) {
         toast = document.createElement('div');

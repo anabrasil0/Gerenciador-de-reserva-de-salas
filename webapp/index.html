@@ -41,7 +41,7 @@
                 <button class="nav-link" onclick="showTab('newRoom')">Cadastrar Sala</button>
             </li>
             <li class="nav-item">
-                <button class="nav-link" onclick="showTab('newRoom')">Calendário</button>
+                <button class="nav-link" onclick="showTab('calendar')">Calendário</button>
             </li>
         </ul>
 
@@ -111,16 +111,27 @@
                     <h5 class="mb-0">Cadastrar Nova Sala</h5>
                 </div>
                 <div class="card-body">
+                    <!--Mensagem de ajuda-->
+                    <div class="alert alert-info mb-3">
+                        <strong>Informação:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>O ID da sala deve ser único (ex: S001, A101).</li>
+                            <li>Escolha o tipo de sala que melhor descreve suas características.</li>
+                            <li>Marque a opção "Possui Computadores" se a sala tiver esta comodidade.</li>
+                        </ul>
+                    </div>
+
                     <form id="roomForm">
                         <div class="form-group mb-3">
-                            <label class="form-label">ID da Sala (ex: S001)</label>
+                            <label class="form-label">ID da Sala</label>
                             <input type="text" id="roomId" class="form-control" placeholder="Ex: S001" required>
                         </div>
                         <div class="form-group mb-3">
                             <label class="form-label">Localização</label>
                             <input type="text" id="roomLocation" class="form-control"
                                 placeholder="Ex: Bloco A, 2º andar" required>
-                        </div>-
+                            <small class="text-muted">Exemplo: Bloco A, 2o andar, Sala 201</small>
+                        </div>
                         <div class="form-group mb-3">
                             <label class="form-label">Tipo</label>
                             <select id="roomType" class="form-select">
@@ -136,6 +147,12 @@
                         </div>
                         <button type="submit" class="btn btn-primary">Cadastrar Sala</button>
                     </form>
+                    <div class="rooms-summary mt-4">
+                        <h6>Salas já cadastradas:</h6>
+                        <div id="roomsSummary" class="summary-list">
+                            <div class="text-muted">Carregando...</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -156,7 +173,7 @@
                         <div id="calendarContainer">
                             <div class="loading-calendar">
                                 <div class="spinner"></div>
-                                <p>Carregando calendário</p>
+                                <p>Carregando calendário...</p>
                             </div>
                         </div>
                     </div>
@@ -164,33 +181,33 @@
             </div>
         </div>
 
-    <!-- Modal de Login -->
-    <div id="loginModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Login</h3>
-                <span class="close" onclick="closeLoginModal()">&times;</span>
-            </div>
-            <div class="modal-body">
-                <p>Digite seu email institucional:</p>
-                <input type="email" id="loginEmail" class="form-control mb-2" placeholder="seu@email.com">
-                <button onclick="login()" class="btn btn-primary w-100">Entrar</button>
-                <p class="text-muted small mt-2">✨ Para teste, use qualquer email válido</p>
+        <!-- Modal de Login -->
+        <div id="loginModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Login</h3>
+                    <span class="close" onclick="closeLoginModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <p>Digite seu email institucional:</p>
+                    <input type="email" id="loginEmail" class="form-control mb-2" placeholder="seu@email.com">
+                    <button onclick="login()" class="btn btn-primary w-100">Entrar</button>
+                    <p class="text-muted small mt-2">Para teste, use qualquer email válido</p>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!--Modal detalhes reserva-->
-    <div id="reservationDetailModal" class="reservation-detail-modal" style="display:none;">
-        <div class="reservation-detail-content">
-            <div class="modal-header">
-                <h3>Detalhes da Reserva</h3>
-                <span class="close" onclick="closeReservationDetail()">$times;</span>
+        <!--Modal detalhes reserva-->
+        <div id="reservationDetailModal" class="reservation-detail-modal" style="display:none;">
+            <div class="reservation-detail-content">
+                <div class="modal-header">
+                    <h3>Detalhes da Reserva</h3>
+                    <span class="close" onclick="closeReservationDetail()">&times;</span>
+                </div>
             </div>
         </div>
-    </div>
-    
-    <script src="js/app.js"></script>
+
+        <script src="js/app.js"></script>
 </body>
 
 </html>
