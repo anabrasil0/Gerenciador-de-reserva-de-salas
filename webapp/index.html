@@ -7,6 +7,7 @@
     <meta name="theme-color" content="#e8c03b">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="format-detection" content="telephone=no">
 
     <title>Sistema de Reserva de Salas</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -17,7 +18,7 @@
     <div class="container">
         <!-- Cabeçalho -->
         <div class="header">
-            <h1>Sistema de Reserva de Salas de Aula</h1>
+            <h1>Sistema de Reserva de Salas</h1>
             <div class="user-info">
                 <span id="userName"></span>
                 <button id="loginBtn" class="btn btn-primary btn-sm" onclick="showLoginModal()">Entrar</button>
@@ -26,29 +27,35 @@
             </div>
         </div>
 
-        <!-- Abas -->
-        <ul class="nav nav-tabs mt-4">
-            <li class="nav-item">
-                <button class="nav-link active" onclick="showTab('rooms')">Salas Disponíveis</button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link" onclick="showTab('myReservations')">Minhas Reservas</button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link" onclick="showTab('newReservation')">Nova Reserva</button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link" onclick="showTab('newRoom')">Cadastrar Sala</button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link" onclick="showTab('calendar')">Calendário</button>
-            </li>
-        </ul>
+        <!-- Abas com scroll horizontal no mobile-->
+        <div class="nav-tabs-wrapper">
+            <ul class="nav-tabs">
+                <li class="nav-item">
+                    <button class="nav-link active" onclick="showTab('rooms')">Salas Disponíveis</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" onclick="showTab('myReservations')">Minhas Reservas</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" onclick="showTab('newReservation')">Nova Reserva</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" onclick="showTab('newRoom')">Cadastrar Sala</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" onclick="showTab('calendar')">Calendário</button>
+                </li>
+            </ul>
+        </div>
 
         <!-- Aba 1: Salas Disponíveis -->
         <div id="roomsTab" class="tab-content mt-4">
+            <div clas="rooms-header">
+                <h2>Salas disponíveis: </h2>
+                <div class="rooms-counter" id="roomsCounter"></div>
             <div class="row" id="roomsContainer">
                 <div class="col-12 text-center">Carregando salas...</div>
+            </div>
             </div>
         </div>
 
@@ -112,13 +119,14 @@
                 </div>
                 <div class="card-body">
                     <!--Mensagem de ajuda-->
-                    <div class="alert alert-info mb-3">
+                    <div class="alert alert-info alert-dismissible fadeshow" role="alert">
                         <strong>Informação:</strong>
                         <ul class="mb-0 mt-2">
                             <li>O ID da sala deve ser único (ex: S001, A101).</li>
                             <li>Escolha o tipo de sala que melhor descreve suas características.</li>
                             <li>Marque a opção "Possui Computadores" se a sala tiver esta comodidade.</li>
                         </ul>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
 
                     <form id="roomForm">
@@ -190,11 +198,11 @@
                 </div>
                 <div class="modal-body">
                     <p>Digite seu email institucional:</p>
-                    <input type="email" id="loginEmail" class="form-control mb-2" placeholder="seu@email.com">
+                    <input type="email" id="loginEmail" class="form-control mb-2" placeholder="seu@email.com" autocomplete="email">
                     <button onclick="login()" class="btn btn-primary w-100">Entrar</button>
                     <p class="text-muted small mt-2">Para teste, use qualquer email válido</p>
                 </div>
-            </div>
+            </div> mb-3
         </div>
 
         <!--Modal detalhes reserva-->
@@ -204,8 +212,12 @@
                     <h3>Detalhes da Reserva</h3>
                     <span class="close" onclick="closeReservationDetail()">&times;</span>
                 </div>
+
+                <div class="modal-body" id="reservationDetailBody">
+                </div>
             </div>
         </div>
+    </div>
 
         <script src="js/app.js"></script>
 </body>
