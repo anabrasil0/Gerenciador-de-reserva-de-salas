@@ -688,8 +688,13 @@ body {
         --secondary-color: #1a1a1a;
         --text-color: #f0f0f0;
         --text-light: #ccc;
+        --font-color: #f0f0f0;
     }
     
+    h1, h2, h3, h4, p, tr, td {
+        color: var(--font-color);
+    }
+
     body {
         background-color: #121212;
     }
