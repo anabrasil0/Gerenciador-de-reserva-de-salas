@@ -16,8 +16,13 @@ import java.sql.ResultSet;
  * @author juuli
  */
 public class SalaService {
-    public void cadastrarSala(Sala novaSala) {
-       
+    public void cadastrarSala(Sala novaSala, Cadastro novoUsuario) {
+
+            if (novoUsuario == null || novoUsuario.getTipo() == null || !novoUsuario.getTipo().equalsIgnoreCase("ADMIN")) {
+            System.out.println("❌ ACESSO NEGADO: Apenas administradores podem cadastrar salas!");
+            return; // Para a execução aqui e não salva no banco
+            }
+        
             // O comando SQL INSERT ensina onde cada dado vai entrar (os ? são espaços vazios)
             String sql = "INSERT INTO sala (id, localizacao, tipo, possuiComputadores) VALUES (?, ?, ?, ?)";
 
