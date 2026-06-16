@@ -1,1 +1,35 @@
-oracleJdk-26/
+cat > .gitignore << 'EOF'
+# Node.js
+node_modules/
+npm-debug.log*
+package-lock.json
+
+# Banco de dados
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# Java
+build/
+dist/
+nbproject/private/
+*.class
+*.jar
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Sistema
+.DS_Store
+Thumbs.db
+*.log
+.env
+
+# Backups
+*.bak
+backup-*
+EOF
