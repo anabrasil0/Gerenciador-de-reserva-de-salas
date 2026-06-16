@@ -43,6 +43,21 @@ public class main {
 
             switch (opcao) {
                 case 1:
+                    // 1. PRIMEIRA COISA: Pede o e-mail para validação
+                    System.out.print("Digite o seu e-mail para validar o acesso: ");
+                    String emailParaVerificar = teclado.nextLine();
+
+                    // 2. Busca o usuário completo direto do banco de dados
+                    Cadastro novoUsuario = cadastroService.buscarUsuarioPorEmail(emailParaVerificar);
+
+                    // 3. VALIDAÇÃO ANTECIPADA: Se o usuário não existir ou não for ADMIN, já barra aqui
+                    if (novoUsuario == null || novoUsuario.getTipo() == null || !novoUsuario.getTipo().equalsIgnoreCase("ADMIN")) {
+                        System.out.println("❌ ACESSO NEGADO: Apenas administradores podem cadastrar salas!");
+                        break; // Sai do case 1 imediatamente e volta para o menu principal
+                    }
+
+                    // 4. Se passou pela validação (é ADMIN), o sistema faz as perguntas da sala
+                    System.out.println("✅ Acesso concedido! Proseguindo com o cadastro da sala...");
                     Sala minhaSala = new Sala();
                     System.out.print("Digite a localização (ex: sala cb-202): ");
                     minhaSala.setLocalizacao(teclado.nextLine());
@@ -50,10 +65,9 @@ public class main {
                     minhaSala.setTipo(teclado.nextLine());
                     System.out.print("A sala possui computadores? (true/false): ");
                     minhaSala.setPossuiComputadores(Boolean.parseBoolean(teclado.nextLine()));
-                    
-                    {
-                        salaService.cadastrarSala(minhaSala);
-                    }
+
+                    // Enviamos a sala criada e o usuário encontrado para o seu método validar
+                    salaService.cadastrarSala(minhaSala, novoUsuario);
                     break;
                     
                 case 2:
